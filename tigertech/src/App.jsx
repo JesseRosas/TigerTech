@@ -60,7 +60,7 @@ const Header = ({ onLogout, username }) => { // <-- Receive username prop
 // (No changes from previous version)
 const Sidebar = ({ activePage, setActivePage }) => {
   // Add "Attendance" and "Payroll" to the nav items
-  const navItems = ['Employee Management', 'Time Off Requests', 'Attendance', 'Payroll', 'Reports', 'Settings'];
+  const navItems = ['Employees', 'Time Off', 'Attendance', 'Payroll', 'Reports', 'Settings'];
 
   return (
     <nav className="[grid-area:sidebar] bg-white border-r border-neutral-200 pt-5">
@@ -129,9 +129,9 @@ const EmployeesContent = () => (
     <h1 className="text-3xl font-bold mb-5">Employee Management</h1>
     <p className="mb-6">Manage employee profiles, search the directory, and onboard new hires.</p>
     <QuickActionsWidget>
-      <Button primary>Manage Employees</Button>
+      <Button primary>Add New Employee</Button>
       <Button>Search Employees</Button>
-      <Button>View Employee Directory</Button>
+      <Button>View Directory</Button>
     </QuickActionsWidget>
   </div>
 );
@@ -139,7 +139,7 @@ const EmployeesContent = () => (
 const TimeOffContent = () => (
   <div>
     <h1 className="text-3xl font-bold mb-5">Time Off</h1>
-    <p className="mb-6">Submit and manage time off requests, view balances.</p>
+    <p className="mb-6">Submit time off requests, view balances, and manage team approvals.</p>
     <QuickActionsWidget>
       <Button primary>Request Time Off</Button>
       <Button>View My Balances</Button>
