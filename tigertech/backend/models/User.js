@@ -5,17 +5,26 @@ import bcrypt from "bcryptjs";
 const userSchema = new mongoose.Schema({
     username: {
         type: String,
-        required: true,
+        required: false,
         unique: true,
     },
     password: {
         type: String,
-        required: true,
+        required: false,
     },
     role: {
         type: String,
         enum: ["user", "admin", "hr", "manager"],
         default: "user"
+    },
+    email: {
+        type: String,
+        required: false
+    },
+    employeeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Employee",
+        default: null
     },
 }, {timestamps: true});
 
@@ -27,7 +36,6 @@ userSchema.pre("save", async function (next) {
     this.password = await bcrypt.hash(this.password, salt);
     next();
 });
-
 
 // Compare passwords
 userSchema.methods.matchPassword = async function (enteredPassword) {

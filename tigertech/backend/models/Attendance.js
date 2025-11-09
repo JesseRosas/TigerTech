@@ -5,7 +5,7 @@ const attendanceSchema = new mongoose.Schema(
     employeeId: { 
         type: mongoose.Schema.Types.ObjectId,
         ref: "Employee",
-        required: true,
+        required: false,
     },
     clockIn: { 
         type: Date,
@@ -17,13 +17,13 @@ const attendanceSchema = new mongoose.Schema(
     type: {
         type: String,
         enum: ["work", "vacation", "sick"],
-        required: true,
+        required: false,
     },
     status: {
         type: String,
         enum: ["approved", "pending", "denied"],
         default: "pending",
-        required: true,
+        required: false,
     },
     notes: {
         type: String,

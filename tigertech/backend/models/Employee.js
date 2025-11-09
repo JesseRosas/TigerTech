@@ -4,23 +4,25 @@ const employeeSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User", // Allows us to reference to the user
-        required: true,
+        required: false,
+        default: null,
     },
     company: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Company",
-        required: true,
+        required: false,
+        default: null,
     },
     position: {
         type: String,
-        required: true,
+        required: false,
     },
     department: {
         type: String,
     },
     salary: {
         type: Number,
-        required: true,
+        required: false,
     },
     dateHired: {
         type: Date,

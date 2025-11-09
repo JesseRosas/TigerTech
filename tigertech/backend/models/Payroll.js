@@ -5,7 +5,7 @@ const payrollSchema = new mongoose.Schema(
     employeeId: { 
         type: mongoose.Schema.Types.ObjectId,
         ref: "Employee",
-        required: true,
+        required: false,
     },
     amount: {
         type: Number,
@@ -13,12 +13,12 @@ const payrollSchema = new mongoose.Schema(
     },
     date: { // Date of pay
         type: Date,
-        required: true,
+        required: false,
     },
     hoursWorked: {
         type: Number,
         default: 0,
-        required: true,
+        required: false,
     },
     overtimeHours: {
         type: Number,
@@ -27,7 +27,7 @@ const payrollSchema = new mongoose.Schema(
     approvedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User", // Allows us to reference to the user
-        required: true,
+        required: false,
     },
     payStubUrl: { // Need to find out how to do this properly
         type: String,

@@ -5,26 +5,26 @@ const dispRecordsSchema = new mongoose.Schema(
     employeeId: { 
         type: mongoose.Schema.Types.ObjectId,
         ref: "Employee",
-        required: true,
+        required: false,
     },
     type: {
         type: String,
         enum: ["warning", "write-up", "other"],
-        required: true,
+        required: false,
     },
     description: {
         type: String,
-        required: true,
+        required: false,
     },
     issuedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User", // Allows us to reference to the user
-        required: true,
+        required: false,
     },
     dateIssued: {
         type: Date,
         default: Date.now,
-        required: true,
+        required: false,
     },
     resolved: {
         type: Boolean,
