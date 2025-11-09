@@ -6,6 +6,11 @@ const generateToken = (id) => {
     return jwt.sign({id}, process.env.JWT_SECRET, {expiresIn: "30d"});
 }
 
+// Things that might need to added
+// Need a way to get one specific user by ID (only admin maybe?)
+// getUsers needs to give a user their own information and no one elses unless its an admin
+// Since we login with a email then maybe we switch login with username to email?
+
 export const createUser = async (req, res) => {
     const {username, password, role, email, employeeId} = req.body;
 
@@ -67,7 +72,7 @@ export const updateUser = async (req, res) => {
 
 export const deleteUser = async (req, res) => {
     try {
-        // We only delete a user if its an admin account
+        // We only delete a user if its an admin account or yourself
         if (req.user.id !== req.params.id && req.user.role !== "admin") {
             return res.status(403).json({ error: "Not authorized to delete this user" });
         }
