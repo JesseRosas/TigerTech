@@ -5,6 +5,7 @@ import connectDB from "./config/db.js";
 import dotenv from "dotenv";
 import userRoutes from "./routes/userRoutes.js";
 import employeeRoutes from "./routes/employeeRoutes.js";
+import companyRoutes from "./routes/companyRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -16,5 +17,6 @@ connectDB();
 
 app.use("/api/users", userRoutes);
 app.use("/api/employees", employeeRoutes);
+app.use("/api/companies", companyRoutes);
 
 app.listen(8080, () => console.log("Listening on port 8080"));
