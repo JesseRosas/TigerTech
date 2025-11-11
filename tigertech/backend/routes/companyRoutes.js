@@ -3,7 +3,7 @@
 
 import express from "express";
 import { createCompany, getCompanies, updateCompany, deleteCompany } from "../controllers/companyController.js";
-import authMiddleware from "../middleware/authMiddleware.js"; // won't put in right now to make testing routes easy
+// import authMiddleware from "../middleware/authMiddleware.js"; won't put in right now to make testing routes easy
 
 const router = express.Router();
 

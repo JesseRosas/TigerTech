@@ -1,13 +1,19 @@
 import Employee from "../models/Employee.js";
 import User from "../models/User.js";
 import Company from "../models/Company.js";
+import bcrypt from "bcryptjs";
+//import bcrypt from "bcryptjs";
 
 export const createEmployee = async (req, res) => {
     try {
-        const { userId, companyId, position, department, salary, dateHired, active, firstName, lastName, phoneNumber } = req.body;
+        const { userId, companyId, position, department, salary, email, dateHired, firstName, lastName, phoneNumber, password, role: newRole } = req.body;
 
         if (req.user.role !== "hr" && req.user.role !== "admin" && req.user.role !== "manager") {
             return res.status(403).json({ error: "Not authorized to create employees" });
+        }
+
+        if (!["hr", "admin", "manager", "user"].includes(newRole)) {
+            return res.status(400).json({ error: "Invalid role" });
         }
 
         // This is not needed right now, good for later when things are set though
@@ -15,35 +21,50 @@ export const createEmployee = async (req, res) => {
         //     return res.status(400).json({ error: "Missing required fields" });
         // }
 
-        // We are going to assume that to make an employee we have a user's id and a companies id and one user can only be one employee
-        const existingUser = await User.findById(userId);
-        if (!existingUser) {
-            return res.status(404).json({ error: "User not found" });
-        }
-
         const existingCompany = await Company.findById(companyId);
         if (!existingCompany) {
             return res.status(404).json({ error: "Company not found" });
         }
 
-        const existingEmployee = await Employee.findOne({ userId: userId });
-        if (existingEmployee) {
-            return res.status(400).json({ error: "This user is already an employee" });
+        // We are going to assume that to make an employee we have a user's id and a companies id and one user can only be one employee
+        let newUser = await User.findOne({ username: userId });
+
+        if (newUser) {
+            const existingEmployee = await Employee.findOne({ userId: newUser._id });
+            if (existingEmployee) {
+                return res.status(400).json({ error: "This user is already an employee" });
+            }
+            newUser.role = newRole;
+            await newUser.save();
+        } else {
+            //Create a new user
+            const hashedPassword = await bcrypt.hash(password, 10);
+            newUser = await User.create({
+                username: userId,
+                password: hashedPassword,
+                role: newRole || "user",
+            });
         }
 
         const employee = await Employee.create({
-            userId,
+            userId: newUser._id,
             companyId,
             position,
             department,
             salary,
+            email,
             dateHired,
-            active,
             firstName,
             lastName,
             phoneNumber,
         });
-        res.status(201).json(employee);
+
+        const populatedEmployee = await employee.populate([
+            { path: "userId", select: "username email role" },
+            { path: "companyId", select: "name" }
+        ]);
+
+        res.status(201).json(populatedEmployee);
     } catch (err) {
         res.status(500).json({error: err.message})
     }
@@ -51,7 +72,6 @@ export const createEmployee = async (req, res) => {
 
 export const getEmployees = async (req, res) => {
     try {
-        // Maybe make it so they get the employees under a certain company? (will do this later and maybe under a separate route)
         if (req.user.role === "hr" || req.user.role === "admin" || req.user.role === "manager") {
             const employees = await Employee.find()
                 .populate("userId", "username email role")
@@ -71,19 +91,20 @@ export const getEmployees = async (req, res) => {
 
 export const updateEmployee = async (req, res) => {
     try {
-        const { userId, companyId, position, department, salary, dateHired, active, firstName, lastName, phoneNumber } = req.body;
+        const { userId, companyId, position, department, salary, email, dateHired, active, firstName, lastName, phoneNumber } = req.body;
 
         if (req.user.role !== "hr" && req.user.role !== "admin" && req.user.role !== "manager") {
             return res.status(403).json({ error: "Not authorized to update employee" });
         }
 
         const updateFields = {};
-        
+
         if (userId) updateFields.userId = userId;
         if (companyId) updateFields.companyId = companyId;
         if (position) updateFields.position = position;
         if (department) updateFields.department = department;
         if (salary) updateFields.salary = salary;
+        if (email) updateFields.email = email;
         if (dateHired) updateFields.dateHired = dateHired;
         if (active !== undefined) updateFields.active = active;
         if (firstName) updateFields.firstName = firstName;

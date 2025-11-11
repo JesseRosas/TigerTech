@@ -36,8 +36,6 @@ export const createUser = async (req, res) => {
 
 export const getUsers = async (req, res) => {
     try {
-        // Need to make it that only admins can see users and if not then you just get your user info
-        // const user = await User.findById(req.body._id).select("-password"); // something like this
         const user = await User.find().select("-password");
         res.json(user);
     } catch (err) {
@@ -52,7 +50,6 @@ export const updateUser = async (req, res) => {
         if(req.user.id !== req.params.id && req.user.role !== "admin") {
             return res.status(403).json({ error: "Not authorized to update this user" });
         }
-
         const updateFields = {}
         if (username) updateFields.username = username;
         if (role) updateFields.role = role;
@@ -63,7 +60,7 @@ export const updateUser = async (req, res) => {
             updateFields.password = await bcrypt.hash(password, salt);
         }
 
-        const user = await User.findByIdAndUpdate(req.params.id, updateFields, { new: true, runValidators: true }).select("-password");
+        const user = await User.findByIdAndUpdate(req.params.id, updateFields, { new: true }).select("-password");
         res.json(user);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -88,7 +85,6 @@ export const loginUser = async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        // This uses username but can change to email if needed
         const user = await User.findOne({ username });
         if (!user) {
             return res.status(400).json({ message: "Invalid credentials" });

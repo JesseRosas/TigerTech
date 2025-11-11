@@ -1,3 +1,19 @@
+# To Run Locally
+
+Open two terminal windows:
+- First: 'cd' into the 'tigertech/backend' folder
+    - Type 'npm run seed'
+    - Then type 'npm run server' (This will be necessary for showcasing database)
+- Second: 'cd' into the 'tigertech' folder
+  - Type 'npm run dev' (This should launch the localhost of the site)
+
+Once these steps are taken (might involve downloading of npm assets), you will be able
+to access the website by copying the link provided in the second terminal window.
+
+
+
+
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

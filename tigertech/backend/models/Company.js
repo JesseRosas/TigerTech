@@ -1,17 +1,17 @@
 import mongoose from "mongoose";
 
 const companySchema = new mongoose.Schema(
-  {
-    name: { 
-        type: String, 
-        required: false,
-        unique: true 
+    {
+        name: {
+            type: String,
+            required: false,
+            unique: true
+        },
+        address: {
+            type: String
+        },
     },
-    address: { 
-        type: String 
-    },
-  },
-  { timestamps: true }
+    { timestamps: true }
 );
 
 export default mongoose.model("Company", companySchema);

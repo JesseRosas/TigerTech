@@ -20,6 +20,9 @@ const employeeSchema = new mongoose.Schema({
     department: {
         type: String,
     },
+    email: {
+        type: String,
+    },
     salary: {
         type: Number,
         required: false,
@@ -46,7 +49,6 @@ const employeeSchema = new mongoose.Schema({
     }
 }, {timestamps: true});
 
-// Still need to find a way to link an employee to their manager or supervisor
-// Maybe give them another employee's id to connect them and front end checks them? (won't add until pretty sure)
+// We still need their name, email, phone, and manager/supervisors id
 
 export default mongoose.model("Employee", employeeSchema);
