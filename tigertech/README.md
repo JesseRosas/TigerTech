@@ -1,10 +1,12 @@
 # To Run Locally
 
+Download zip and extract.
+
 Open two terminal windows:
-- First: 'cd' into the 'tigertech/backend' folder
+- First: 'cd' into the '.../TigerTech-main/tigertech/backend' folder
     - Type 'npm run seed'
     - Then type 'npm run server' (This will be necessary for showcasing database)
-- Second: 'cd' into the 'tigertech' folder
+- Second: 'cd' into the '.../TigerTech-main/tigertech' folder
   - Type 'npm run dev' (This should launch the localhost of the site)
 
 Once these steps are taken (might involve downloading of npm assets), you will be able
