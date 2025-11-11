@@ -20,7 +20,10 @@ export const createUser = async (req, res) => {
             return res.status(400).json({message: "User already exist"});
         }
 
-        const user = await User.create({username, password, role, email, employeeId});
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const user = await User.create({username, password: hashedPassword, role, email, employeeId});
         res.status(201).json({
             _id: user._id,
             username: user.username,
@@ -83,14 +86,34 @@ export const deleteUser = async (req, res) => {
 
 export const loginUser = async (req, res) => {
     const { username, password } = req.body;
-
     try {
         const user = await User.findOne({ username });
         if (!user) {
             return res.status(400).json({ message: "Invalid credentials" });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
+        let isMatch = false;
+
+        //Try bcrypt compare first
+        try {
+            console.log("Login attempt:", username, "Stored hash:", user.password);
+            isMatch = await bcrypt.compare(password, user.password);
+        } catch (e) {
+            isMatch = false;
+        }
+
+        //If bcrypt compare fails, fall back to plain-text match
+        if (!isMatch && user.password === password) {
+            console.warn(`⚠️ User ${username} still using plaintext password. Rehashing now...`);
+
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password, salt);
+
+            user.password = hashedPassword;
+            await user.save();
+
+            isMatch = true;
+        }
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid credentials" });
         }

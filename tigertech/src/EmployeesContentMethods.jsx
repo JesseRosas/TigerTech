@@ -7,6 +7,8 @@ export function EmployeesContentMethods ({ role }) {
     const [companies, setCompanies] = useState([]);
     const [newEmployee, setNewEmployee] = useState({
         userId: "",
+        password: "",
+        role: "user",
         companyId: "",
         position: "",
         department: "",
@@ -94,22 +96,24 @@ export function EmployeesContentMethods ({ role }) {
     const handleEdit = (emp) => {
         setEditingEmployee(emp);
         setNewEmployee({
-            userId: emp.user?._id || "",
-            companyId: emp.company?._id || "",
-            position: emp.position,
-            department: emp.department,
-            salary: emp.salary,
-            email: emp.email,
+            userId: emp.userId?.username || "",
+            companyId: emp.companyId?._id || "",
+            position: emp.position || "",
+            department: emp.department || "",
+            salary: emp.salary || "",
+            email: emp.email || "",
             dateHired: emp.dateHired?.slice(0, 10) || "",
             firstName: emp.firstName || "",
             lastName: emp.lastName || "",
             phoneNumber: emp.phoneNumber || "",
+            role: emp.userId?.role || "user",
         });
     };
 
     const handleUpdateEmployee = async (e) => {
         e.preventDefault();
         try {
+            console.log("Updating employee:", newEmployee);
             await axios.put(
                 `http://localhost:8080/api/employees/${editingEmployee._id}`,
                 newEmployee,
@@ -129,12 +133,29 @@ export function EmployeesContentMethods ({ role }) {
                 firstName: "",
                 lastName: "",
                 phoneNumber: "",
+                role: "user",
             });
             fetchEmployees();
         } catch (err) {
             console.error(err);
             setError("Error updating employee");
         }
+    };
+
+    const handleCancelEdit = () => {
+        setEditingEmployee(null);
+        setNewEmployee({
+            userId: "",
+            companyId: "",
+            position: "",
+            department: "",
+            salary: "",
+            email: "",
+            dateHired: "",
+            firstName: "",
+            lastName: "",
+            phoneNumber: "",
+        });
     };
 
     if (role !== "hr" && role !== "admin" && role !== "manager") {
@@ -152,7 +173,7 @@ export function EmployeesContentMethods ({ role }) {
             <p className="mb-6">View, add, and remove employee records.</p>
 
             <form
-                onSubmit={handleAddEmployee}
+                onSubmit={editingEmployee ? handleUpdateEmployee : handleAddEmployee}
                 className="bg-gray-100 p-4 rounded-lg mb-6 grid grid-cols-2 gap-4"
             >
                 <input
@@ -265,6 +286,15 @@ export function EmployeesContentMethods ({ role }) {
                 >
                     {editingEmployee ? "Update Employee" : "Add Employee"}
                 </button>
+                {editingEmployee && (
+                    <button
+                        type="button"
+                        onClick={handleCancelEdit}
+                        className="col-span-2 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 rounded"
+                    >
+                        Cancel Edit
+                    </button>
+                )}
             </form>
 
             {loading ? (
@@ -284,6 +314,7 @@ export function EmployeesContentMethods ({ role }) {
                         <th className="border p-2">First Name</th>
                         <th className="border p-2">Last Name</th>
                         <th className="border p-2">Phone Number</th>
+                        <th className="border p-2">Role</th>
                         <th className="border p-2">Actions</th>
                     </tr>
                     </thead>
@@ -299,6 +330,7 @@ export function EmployeesContentMethods ({ role }) {
                             <td className="border p-2">{emp.firstName}</td>
                             <td className="border p-2">{emp.lastName}</td>
                             <td className="border p-2">{emp.phoneNumber}</td>
+                            <td className="border p-2">{emp.userId?.role}</td>
                             <td className="border p-2">
                                 <button
                                     onClick={() => handleEdit(emp)}
