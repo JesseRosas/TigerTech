@@ -99,6 +99,9 @@ export function EmployeesContentMethods ({ role }) {
             let res;
             const userID = await getUserIdFromUsername(newEmployee.userId); // gets userId with username input
 
+            // console.log("Tesing newEmployee id: ", newEmployee.userId);
+            // console.log("userID is ", userID);
+
             if(!userID){ // Create a user
                 res = await axios.post(`http://localhost:8080/api/users`,
                     {username: newEmployee.userId, password: newEmployee.password, role: newEmployee.role, email: newEmployee.email}
@@ -187,9 +190,9 @@ export function EmployeesContentMethods ({ role }) {
     const handleEdit = (emp) => {
         setEditingEmployee(emp);
         setNewEmployee({
-            userId: emp.userId?._id || "",
+            userId: emp.userId?.username || "",
             password: emp.userId?.password || "",
-            username: emp.userId?.username || "",
+            // username: emp.userId?.username || "",
             companyId: emp.companyId?._id || "",
             position: emp.position || "",
             department: emp.department || "",
@@ -245,7 +248,7 @@ export function EmployeesContentMethods ({ role }) {
             const userID = editingEmployee.userId?._id;
 
             const userData = {
-                username: newEmployee.username, 
+                username: newEmployee.userId, 
                 role: newEmployee.role, 
                 email: newEmployee.email,
             };
@@ -280,6 +283,7 @@ export function EmployeesContentMethods ({ role }) {
             setEditingEmployee(null);
             setNewEmployee({
                 userId: "",
+                // username: "",
                 password: "",
                 companyId: "",
                 position: "",
@@ -336,9 +340,9 @@ export function EmployeesContentMethods ({ role }) {
             >
                 <input
                     type="text"
-                    placeholder="User ID"
-                    value={newEmployee.username}
-                    onChange={(e) => setNewEmployee({ ...newEmployee, username: e.target.value })}
+                    placeholder="Username"
+                    value={newEmployee.userId}
+                    onChange={(e) => setNewEmployee({ ...newEmployee, userId: e.target.value })}
                     className="p-2 border rounded"
                     required
                 />
