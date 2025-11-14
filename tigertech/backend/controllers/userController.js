@@ -34,6 +34,21 @@ export const createUser = async (req, res) => {
     }
 };
 
+export const getUserByUsername = async (req, res) => {
+    try {
+        const {username} = req.params;
+        const user = await User.findOne({username: username}).select("-password");
+
+        if(!user){
+            return res.status(404).json({error: "User not found"});
+        }
+
+        res.json(user);
+    } catch (err) {
+        res.status(500).json({error: err.message});
+    }
+};
+
 export const getUsers = async (req, res) => {
     try {
         // Need to make it that only admins can see users and if not then you just get your user info

@@ -69,6 +69,21 @@ export const getEmployees = async (req, res) => {
     }
 };
 
+export const getEmployeeById = async (req, res) => {
+    try {
+        const employee = await Employee.findById(req.params.id)
+            .populate("userId", "username email role")
+            .populate("companyId", "name");
+
+        if(!employee){
+            return res.status(404).json({error: "Employee not found"});
+        }
+        res.json(employee);
+    } catch (error) {
+        res.status(500).json({error: error.message});
+    }
+}
+
 export const updateEmployee = async (req, res) => {
     try {
         const { userId, companyId, position, department, salary, dateHired, active, firstName, lastName, phoneNumber } = req.body;
