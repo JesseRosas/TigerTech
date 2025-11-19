@@ -82,7 +82,7 @@ export const getEmployeeById = async (req, res) => {
     } catch (error) {
         res.status(500).json({error: error.message});
     }
-}
+};
 
 export const updateEmployee = async (req, res) => {
     try {
