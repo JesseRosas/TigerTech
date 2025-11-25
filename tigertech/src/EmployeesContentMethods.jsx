@@ -22,6 +22,7 @@ export function EmployeesContentMethods ({ role }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [editingEmployee, setEditingEmployee] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
     const token = localStorage.getItem("token");
 
@@ -37,6 +38,21 @@ export function EmployeesContentMethods ({ role }) {
         }).then(res => setCompanies(res.data))
             .catch(err => console.error("Failed to fetch companies:", err));
     }, []);
+
+    // This stuff should be handled by backend
+    const filteredEmployees = employees.filter(emp => {
+        const fullName = `${emp.firstName || ""} ${emp.lastName || ""}`.toLowerCase();
+        const username = emp.userId?.username?.toLowerCase() || "";
+        const dept = emp.department?.toLowerCase() || "";
+        const pos = emp.position?.toLowerCase() || "";
+
+        return (
+            fullName.includes(searchQuery.toLowerCase())
+            || username.includes(searchQuery.toLowerCase())
+            || dept.includes(searchQuery.toLowerCase())
+            || pos.includes(searchQuery.toLowerCase())
+        );
+    });
 
     const fetchEmployees = async () => {
         try {
@@ -459,6 +475,17 @@ export function EmployeesContentMethods ({ role }) {
                 )}
             </form>
 
+            <div className="mb-4">
+                <input
+                    type="text"
+                    placeholder="Search employees..."
+                    className="w-full p-3 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+            </div>
+
+
             {loading ? (
                 <p>Loading employees...</p>
             ) : error ? (
@@ -481,7 +508,7 @@ export function EmployeesContentMethods ({ role }) {
                     </tr>
                     </thead>
                     <tbody>
-                    {employees.map((emp) => (
+                    {filteredEmployees.map((emp) => (
                         <tr key={emp._id}>
                             <td className="border p-2">{emp.userId?.username}</td>
                             <td className="border p-2">{emp.position}</td>
