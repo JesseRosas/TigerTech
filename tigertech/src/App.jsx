@@ -154,6 +154,101 @@ const EmployeesContent = ({ employees, setEmployees }) => {
   const [currentView, setCurrentView] = useState('actions'); // 'actions' or 'directory'
   const [editingEmployee, setEditingEmployee] = useState(null); // Holds employee to edit
   const [deletingEmployeeId, setDeletingEmployeeId] = useState(null); // Holds employee ID to delete
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
+
+  // Load employees when opening Employees page for the first time
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const res = await fetch("/api/employees", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const data = await res.json();
+
+        const normalized = (Array.isArray(data) ? data : [data]).map(emp => ({
+          ...emp,
+          id: emp._id,
+        }));
+
+        setEmployees(normalized);
+
+      } catch (err) {
+        console.error("Failed to load employees:", err);
+      }
+    };
+
+  fetchEmployees();
+}, []);  // runs ONCE when EmployeesContent mounts
+
+  // Search handler
+// Search handler
+const handleSearch = async () => {
+  try {
+    setSearching(true);
+
+    const res = await fetch(
+      `/api/employees?search=${encodeURIComponent(searchQuery)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    const data = await res.json();
+
+    // Convert _id → id for React
+    const normalized = (Array.isArray(data) ? data : [data]).map(emp => ({
+      ...emp,
+      id: emp._id
+    }));
+
+    setEmployees(normalized);
+    setCurrentView("directory");
+
+  } catch (err) {
+    console.error("Search failed:", err);
+  } finally {
+    setSearching(false);
+  }
+};
+
+  /*
+  const res = await fetch(
+    `/api/employees?search=${encodeURIComponent(searchQuery)}`,
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json"
+      }
+    }
+  );
+
+
+    const data = await res.json();
+    //setEmployees(Array.isArray(data) ? data : [data]); // gives react a list - ALWAYS give React a list
+    const normalized = (Array.isArray(data) ? data : [data]).map(emp => ({
+      ...emp,
+      id: emp._id,   // add an id field the frontend expects
+    }));
+
+    setEmployees(normalized);
+
+    setCurrentView("directory"); // auto-switch to directory view  
+    } catch (err) {
+      console.error("Search failed:", err);
+    } finally {
+      setSearching(false);
+    }
+  };
+  */
 
   // Function to save (add or update) an employee
   const handleSaveEmployee = (employeeData) => {
@@ -195,7 +290,20 @@ const EmployeesContent = ({ employees, setEmployees }) => {
   return (
     <div>
       <h1 className="text-3xl font-bold mb-5">Employee Management</h1>
-      
+       {/* SEARCH BAR Always Visible*/}
+      <div className="flex items-center gap-2 mb-6">
+        <input
+          className="p-2 border rounded-md"
+          placeholder="Search employees..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)} // Update search query state
+        />
+        <Button primary onClick={handleSearch} disabled={searching}>
+          {searching ? "Searching..." : "Search"}
+        </Button>
+        <Button primary onClick={() => { setSearchQuery(""); }}>Clear Search</Button>
+      </div>
+
       {/* VIEW 1: Quick Actions */}
       {currentView === 'actions' && (
         <>
@@ -203,7 +311,6 @@ const EmployeesContent = ({ employees, setEmployees }) => {
           <QuickActionsWidget>
             <Button primary onClick={handleAddClick}>Add New Employee</Button>
             <Button primary onClick={() => setCurrentView('directory')}>View Directory</Button>
-            <Button primary>Search Employees</Button>
           </QuickActionsWidget>
         </>
       )}

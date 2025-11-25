@@ -48,7 +48,7 @@ export const createEmployee = async (req, res) => {
         res.status(500).json({error: err.message})
     }
 };
-
+/*
 export const getEmployees = async (req, res) => {
     try {
         // Maybe make it so they get the employees under a certain company? (will do this later and maybe under a separate route)
@@ -67,7 +67,107 @@ export const getEmployees = async (req, res) => {
     } catch (err) {
         res.status(500).json({error: err.message});
     }
+}; */
+// New getEmployees function
+/*
+export const getEmployees = async (req, res) => {
+  try {
+    const q = req.query.search ? req.query.search.trim() : null;
+
+    let query = {};
+
+    // If searc  is provided, build MongoDB regex query
+    if (q) {
+      const regex = { $regex: q, $options: "i" }; // case-insensitive search
+      query.$or = [
+        { firstName: regex },
+        { lastName: regex },
+        { position: regex },
+        { department: regex }
+      ];
+    }
+
+    let employees = []
+    // HR/Admin can see all employees
+if (req.user.role === "hr" || req.user.role === "admin" || req.user.role === "manager") {      const employees = await Employee.find(query)
+        employees = await Employee.find(query)
+        .populate("userId", "username email role")
+        .populate("companyId", "name");
+
+      return res.json(employees);
+    }
+
+    // Regular employee: only see own record
+    const employee = await Employee.findOne({ userId: req.user._id })
+      .populate("userId", "username email role")
+      .populate("companyId", "name");
+
+    if (!employee) return res.status(404).json({ error: "Employee not found" });
+
+    // If searching and the only employee doesn't match → return empty list
+    if (q) {
+      const match =
+        employee.firstName?.toLowerCase().includes(q.toLowerCase()) ||
+        employee.lastName?.toLowerCase().includes(q.toLowerCase()) ||
+        employee.position?.toLowerCase().includes(q.toLowerCase()) ||
+        employee.department?.toLowerCase().includes(q.toLowerCase());
+
+      if (!match) return res.json([]);
+    }
+
+    return res.json(employee);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};*/
+
+export const getEmployees = async (req, res) => {
+  try {
+    const search = req.query.search ? req.query.search.trim() : "";
+
+    let query = {};
+
+    // If a search query exists, enable filtering
+    if (search.length > 0) {
+      const regex = { $regex: search, $options: "i" };
+
+      query.$or = [
+        { firstName: regex },
+        { lastName: regex },
+        { position: regex },
+        { department: regex },
+        { phoneNumber: regex },
+      ];
+    }
+
+    let employees = [];
+
+    // HR/Admin/Manager → can see ALL employees
+    if (
+      req.user.role === "admin" ||
+      req.user.role === "manager" ||
+      req.user.role === "hr"
+    ) {
+      employees = await Employee.find(query)
+        .populate("userId", "username email role")
+        .populate("companyId", "name");
+    } else {
+      // Regular user — only return THEIR record
+      employees = await Employee.find({
+        userId: req.user._id,
+        ...query,
+      })
+        .populate("userId", "username email role")
+        .populate("companyId", "name");
+    }
+
+    return res.json(employees);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 };
+
 
 export const updateEmployee = async (req, res) => {
     try {
