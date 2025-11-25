@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+//import EmployeeContent from './EmployeeContent.jsx';
+// Note: Other content components (TimeOffContent, AttendanceContent, etc.) would be imported similarly.
+
+// --- Reusable Components and Helpers ---
 
 // --- 1. Header Component (Modified for Logout Dropdown) ---
 const Header = ({ onLogout, username }) => { // <-- Receive username prop
@@ -149,12 +153,19 @@ const ConfirmModal = ({ title, message, onConfirm, onCancel }) => {
 // --- Page Content Components (UPDATED) ---
 
 // --- Employees Content (Heavily Modified) ---
+
 const EmployeesContent = ({ employees, setEmployees }) => {
   const [isModalOpen, setIsModalOpen] = useState(false); // Controls modal visibility
   const [currentView, setCurrentView] = useState('actions'); // 'actions' or 'directory'
   const [editingEmployee, setEditingEmployee] = useState(null); // Holds employee to edit
   const [deletingEmployeeId, setDeletingEmployeeId] = useState(null); // Holds employee ID to delete
+  const [search, setSearch] = useState(''); // Search term
 
+  // Filter for search
+  const filteredEmployees = employees.filter(emp =>
+    `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(search.toLowerCase())
+  );
+  
   // Function to save (add or update) an employee
   const handleSaveEmployee = (employeeData) => {
     if (employeeData.id) {
@@ -192,26 +203,39 @@ const EmployeesContent = ({ employees, setEmployees }) => {
   };
 
   // Main render logic for this component
+  
   return (
     <div>
       <h1 className="text-3xl font-bold mb-5">Employee Management</h1>
       
+      {/* Search Bar */}
+      <div className="flex gap-2 mb-4">
+        <input
+          className="p-2 border rounded-md"
+          placeholder="Search employees..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+      
       {/* VIEW 1: Quick Actions */}
+      
       {currentView === 'actions' && (
         <>
           <p className="mb-6">Manage employee profiles, search the directory, and onboard new hires.</p>
           <QuickActionsWidget>
             <Button primary onClick={handleAddClick}>Add New Employee</Button>
             <Button primary onClick={() => setCurrentView('directory')}>View Directory</Button>
-            <Button primary>Search Employees</Button>
+            <Button primary onClick={() => setCurrentView('directory')}>Search Employees</Button>
           </QuickActionsWidget>
         </>
       )}
 
       {/* VIEW 2: Employee Directory */}
+      
       {currentView === 'directory' && (
         <EmployeeDirectory 
-          employees={employees} 
+          employees={filteredEmployees} 
           onBack={() => setCurrentView('actions')}
           onEdit={handleEditClick} // Pass down edit function
           onDeleteRequest={setDeletingEmployeeId} // Pass down delete request function
@@ -219,6 +243,7 @@ const EmployeesContent = ({ employees, setEmployees }) => {
       )}
 
       {/* The modal is rendered here but only visible when isModalOpen is true */}
+      
       {isModalOpen && (
         <EmployeeFormModal
           employeeToEdit={editingEmployee}
@@ -231,6 +256,7 @@ const EmployeesContent = ({ employees, setEmployees }) => {
       )}
       
       {/* The confirmation modal for deletion */}
+      
       {deletingEmployeeId && (
         <ConfirmModal
           title="Delete Employee"
@@ -242,6 +268,7 @@ const EmployeesContent = ({ employees, setEmployees }) => {
     </div>
   );
 };
+
 
 // --- Employee Directory (UPDATED) ---
 const EmployeeDirectory = ({ employees, onBack, onEdit, onDeleteRequest }) => {
