@@ -110,6 +110,7 @@ const ContentArea = ({ activePage, employees, setEmployees }) => {
     <main className="[grid-area:content] p-8 overflow-y-auto bg-neutral-100">
       {activePage === 'Employees' && <EmployeesContent {...contentProps.Employees} />}
       {activePage === 'Time Off' && <TimeOffContent />}
+      {activePage === "Time Off Balances" && <TimeOffBalances />}
       {activePage === 'Attendance' && <AttendanceContent />}
       {activePage === 'Payroll' && <PayrollContent />}    
       {activePage === 'Reports' && <ReportsContent />}
@@ -469,19 +470,336 @@ const Checkbox = ({ label, name, checked, onChange }) => (
 
 
 // --- Other Content Pages (Unchanged) ---
-
+/* Old TimeOffContent (for reference)
 const TimeOffContent = () => (
   <div>
     <h1 className="text-3xl font-bold mb-5">Time Off</h1>
     <p className="mb-6">Submit time off requests, view balances, and manage team approvals.</p>
     <QuickActionsWidget>
       <Button primary>Request Time Off</Button>
-      <Button primary>View My Balances</Button>
+      <Button primary onClick={() => setActivePage("Time Off Balances")}>
+        View My Balances
+      </Button>
       <Button primary>Team Calendar</Button>
       <Button primary>Pending Approvals</Button>
     </QuickActionsWidget>
   </div>
 );
+*/
+// New TimeOffContent with view switching
+
+// --- TIME OFF SYSTEM (FULLY UPDATED) ---
+
+const TimeOffContent = () => {
+  const [currentView, setCurrentView] = useState("actions");
+
+  // Time off balances (hours or days — your choice)
+  const [balances, setBalances] = useState({
+    pto: { earned: 80, used: 16 },
+    sick: { earned: 40, used: 4 },
+    vacation: { earned: 40, used: 8 },
+  });
+
+  // Requests
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [approvedRequests, setApprovedRequests] = useState([]);
+
+  // Add new pending request
+  const addPendingRequest = (req) => {
+    setPendingRequests(prev => [...prev, req]);
+  };
+
+  // APPROVE request + subtract from balances + move to approved
+  const approveRequest = (id) => {
+    const req = pendingRequests.find(r => r.id === id);
+    if (!req) return;
+
+    // Remove from pending
+    setPendingRequests(prev => prev.filter(r => r.id !== id));
+
+    // Add to approved list
+    setApprovedRequests(prev => [...prev, req]);
+
+    // --- Calculate days between start & end ---
+    const start = new Date(req.start);
+    const end = new Date(req.end);
+    const diffTime = Math.abs(end - start) + 1 * 24 * 60 * 60 * 1000;
+    const daysRequested = diffTime / (1000 * 60 * 60 * 24);
+
+    // Convert type (e.g., "PTO" → "pto")
+    const key = req.type.toLowerCase().replace(" ", "");
+
+    // Update time off balances
+    setBalances(prev => ({
+      ...prev,
+      [key]: {
+        earned: prev[key].earned,
+        used: prev[key].used + daysRequested,
+      }
+    }));
+  };
+
+  // DENY request (just delete it)
+  const denyRequest = (id) => {
+    setPendingRequests(prev => prev.filter(r => r.id !== id));
+  };
+
+  return (
+    <div>
+      <h1 className="text-3xl font-bold mb-5">Time Off</h1>
+
+      {currentView === "actions" && (
+        <>
+          <p className="mb-6 text-neutral-700">
+            Submit requests, check balances, and manage approvals.
+          </p>
+
+          <QuickActionsWidget>
+            <Button primary onClick={() => setCurrentView("request")}>
+              Request Time Off
+            </Button>
+            <Button primary onClick={() => setCurrentView("balances")}>
+              View My Balances
+            </Button>
+            <Button primary onClick={() => setCurrentView("calendar")}>
+              Team Calendar
+            </Button>
+            <Button primary onClick={() => setCurrentView("approvals")}>
+              Pending Approvals
+            </Button>
+          </QuickActionsWidget>
+        </>
+      )}
+
+      {currentView === "balances" && (
+        <TimeOffBalances
+          balances={balances}
+          onBack={() => setCurrentView("actions")}
+        />
+      )}
+
+      {currentView === "request" && (
+        <TimeOffRequestForm
+          onBack={() => setCurrentView("actions")}
+          addPending={addPendingRequest}
+        />
+      )}
+
+      {currentView === "calendar" && (
+        <TeamCalendar
+          approved={approvedRequests}
+          onBack={() => setCurrentView("actions")}
+        />
+      )}
+
+      {currentView === "approvals" && (
+        <PendingApprovals
+          pending={pendingRequests}
+          approveRequest={approveRequest}
+          denyRequest={denyRequest}
+          onBack={() => setCurrentView("actions")}
+        />
+      )}
+    </div>
+  );
+};
+
+
+// --- TIME OFF BALANCES PAGE ---
+
+const TimeOffBalances = ({ onBack, balances }) => {
+  const calcRemaining = (earned, used) => earned - used;
+
+  return (
+    <div className="bg-white p-6 rounded-lg shadow-sm border">
+      <div className="flex justify-between mb-4">
+        <h2 className="text-xl font-bold">My Time Off Balances</h2>
+        <Button onClick={onBack}>Back</Button>
+      </div>
+
+      <table className="w-full border text-left">
+        <thead className="bg-neutral-100">
+          <tr>
+            <th className="p-3">Type</th>
+            <th className="p-3">Earned</th>
+            <th className="p-3">Used</th>
+            <th className="p-3">Remaining</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr className="border-b">
+            <td className="p-3">PTO</td>
+            <td className="p-3">{balances.pto.earned}</td>
+            <td className="p-3">{balances.pto.used}</td>
+            <td className="p-3">{calcRemaining(balances.pto.earned, balances.pto.used)}</td>
+          </tr>
+          <tr className="border-b">
+            <td className="p-3">Sick Leave</td>
+            <td className="p-3">{balances.sick.earned}</td>
+            <td className="p-3">{balances.sick.used}</td>
+            <td className="p-3">{calcRemaining(balances.sick.earned, balances.sick.used)}</td>
+          </tr>
+          <tr>
+            <td className="p-3">Vacation</td>
+            <td className="p-3">{balances.vacation.earned}</td>
+            <td className="p-3">{balances.vacation.used}</td>
+            <td className="p-3">{calcRemaining(balances.vacation.earned, balances.vacation.used)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+
+// --- REQUEST TIME OFF FORM ---
+
+const TimeOffRequestForm = ({ onBack, addPending }) => {
+  const [form, setForm] = useState({
+    type: "PTO",
+    start: "",
+    end: "",
+    reason: "",
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const newRequest = {
+      id: Date.now(),
+      ...form
+    };
+
+    addPending(newRequest);
+    alert("Request submitted!");
+    onBack();
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-lg border shadow">
+      <div className="flex justify-between mb-4">
+        <h2 className="text-xl font-bold">Request Time Off</h2>
+        <Button onClick={onBack}>Back</Button>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <select
+          name="type"
+          value={form.type}
+          onChange={(e) => setForm({ ...form, type: e.target.value })}
+          className="w-full p-2 border rounded"
+        >
+          <option>PTO</option>
+          <option>Sick Leave</option>
+          <option>Vacation</option>
+        </select>
+
+        <input
+          type="date"
+          value={form.start}
+          onChange={(e) => setForm({ ...form, start: e.target.value })}
+          className="w-full p-2 border rounded"
+        />
+
+        <input
+          type="date"
+          value={form.end}
+          onChange={(e) => setForm({ ...form, end: e.target.value })}
+          className="w-full p-2 border rounded"
+        />
+
+        <textarea
+          rows="3"
+          value={form.reason}
+          onChange={(e) => setForm({ ...form, reason: e.target.value })}
+          className="w-full p-2 border rounded"
+          placeholder="Reason..."
+        />
+
+        <Button primary type="submit">Submit Request</Button>
+      </form>
+    </div>
+  );
+};
+
+
+// --- PENDING APPROVALS PAGE ---
+
+const PendingApprovals = ({ onBack, pending, approveRequest, denyRequest }) => (
+  <div className="bg-white p-6 rounded-lg border shadow">
+    <div className="flex justify-between mb-4">
+      <h2 className="text-xl font-bold">Pending Approvals</h2>
+      <Button onClick={onBack}>Back</Button>
+    </div>
+
+    {pending.length === 0 ? (
+      <p>No pending requests.</p>
+    ) : (
+      <table className="w-full border">
+        <thead className="bg-neutral-100">
+          <tr>
+            <th className="p-2">Type</th>
+            <th className="p-2">Dates</th>
+            <th className="p-2">Reason</th>
+            <th className="p-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {pending.map((req) => (
+            <tr key={req.id} className="border-t">
+              <td className="p-2">{req.type}</td>
+              <td className="p-2">{req.start} → {req.end}</td>
+              <td className="p-2">{req.reason}</td>
+              <td className="p-2 flex gap-2">
+                <Button primary onClick={() => approveRequest(req.id)}>
+                  Approve
+                </Button>
+                <Button onClick={() => denyRequest(req.id)}>Deny</Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </div>
+);
+
+
+// --- TEAM CALENDAR PAGE ---
+
+const TeamCalendar = ({ onBack, approved }) => (
+  <div className="bg-white p-6 rounded-lg border shadow">
+    <div className="flex justify-between mb-4">
+      <h2 className="text-xl font-bold">Team Calendar</h2>
+      <Button onClick={onBack}>Back</Button>
+    </div>
+
+    {approved.length === 0 ? (
+      <p>No approved time off yet.</p>
+    ) : (
+      <table className="w-full border">
+        <thead className="bg-neutral-100">
+          <tr>
+            <th className="p-2">Type</th>
+            <th className="p-2">Dates</th>
+            <th className="p-2">Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          {approved.map((req) => (
+            <tr key={req.id} className="border-t">
+              <td className="p-2">{req.type}</td>
+              <td className="p-2">{req.start} → {req.end}</td>
+              <td className="p-2">{req.reason}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    )}
+  </div>
+);
+
+
 
 const AttendanceContent = () => (
   <div>
